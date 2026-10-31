@@ -1,0 +1,418 @@
+/* ==========================================================================
+   مصمم الصور - ملف الأنماط والتنسيقات (CSS)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. متغيرات الألوان والتصميم (Theme Variables)
+   -------------------------------------------------------------------------- */
+:root {
+  --bg: #f4efe9;         /* لون الخلفية العام */
+  --sf: #ffffff;         /* لون خلفية البطاقات والأسطح */
+  --tx: #1b1b1b;         /* لون النصوص الأساسي */
+  --mu: #6b6b6b;         /* لون النصوص الهامشية والتلميحات */
+  --ac: #7F0025;         /* لون التمييز الأساسي (Burgundy) */
+  --on: #ffffff;         /* لون النص فوق لون التمييز */
+  --bd: #e2d9cc;         /* لون الحدود والفواصل */
+
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* دعم الوضع الليلي التلقائي واليدوي (Dark Mode) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121212;
+    --sf: #1d1d1d;
+    --tx: #eeeeee;
+    --mu: #9a9a9a;
+    --ac: #D3AE3A;
+    --on: #121212;
+    --bd: #333333;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #121212;
+  --sf: #1d1d1d;
+  --tx: #eeeeee;
+  --mu: #9a9a9a;
+  --ac: #D3AE3A;
+  --on: #121212;
+  --bd: #333333;
+}
+
+/* --------------------------------------------------------------------------
+   2. الإعدادات العامة والترويسة (Base & Header)
+   -------------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--tx);
+  font-family: CairoB, Tahoma, Arial, sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+header {
+  padding: 20px 20px 4px;
+  max-width: 1240px;
+  margin: auto;
+}
+
+h1 {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--ac);
+}
+
+header p {
+  margin: 2px 0 0;
+  color: var(--mu);
+}
+
+/* --------------------------------------------------------------------------
+   3. التخطيط الرئيسي (Main Layout Grid)
+   -------------------------------------------------------------------------- */
+main {
+  max-width: 1240px;
+  margin: auto;
+  padding: 12px 20px 40px;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 450px) minmax(0, 1fr);
+  align-items: start;
+}
+
+/* استجابة الشاشات الصغيرة (الهواتف والأجهزة اللوحية) */
+@media (max-width: 880px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. لوحة التحكم والقوائم القابلة للطي (Controls & Accordions)
+   -------------------------------------------------------------------------- */
+.ctl {
+  display: grid;
+  gap: 10px;
+}
+
+details {
+  background: var(--sf);
+  border: 1px solid var(--bd);
+  border-radius: 16px;
+  padding: 0 16px;
+  transition: border-color 0.2s ease;
+}
+
+summary {
+  padding: 13px 0;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--ac);
+  user-select: none;
+}
+
+details > div {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   5. حقول الإدخال والنماذج (Form Controls & Inputs)
+   -------------------------------------------------------------------------- */
+label {
+  display: grid;
+  gap: 5px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+small {
+  color: var(--mu);
+  font-weight: 400;
+}
+
+input[type="text"],
+textarea,
+select {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--tx);
+  font: inherit;
+  font-weight: 400;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--ac);
+}
+
+input[type="file"] {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.g2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   6. الأزرار وشارات القوالب (Buttons & Badges)
+   -------------------------------------------------------------------------- */
+button {
+  font-family: inherit;
+}
+
+.tpls button,
+.chip,
+.sl button {
+  padding: 8px 10px;
+  border: 2px solid var(--bd);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--tx);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tpls button:hover,
+.chip:hover,
+.sl button:hover {
+  border-color: var(--ac);
+}
+
+.tpls button.on,
+.sl button.on {
+  border-color: var(--ac);
+  background: var(--ac);
+  color: var(--on);
+}
+
+/* --------------------------------------------------------------------------
+   7. لوحات الألوان والألوان المخصصة (Palettes & Colors)
+   -------------------------------------------------------------------------- */
+.pal {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 5px 8px;
+}
+
+.chip i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.cols {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.cols label {
+  font-size: 11px;
+  text-align: center;
+}
+
+input[type="color"] {
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  padding: 2px;
+  background: none;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   8. خيارات التحديد وصناديق الاختيار (Checkboxes)
+   -------------------------------------------------------------------------- */
+.chk {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.chk label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   9. منطقة المعاينة والكانفاس والشرائح (Preview, Canvas, Slides)
+   -------------------------------------------------------------------------- */
+.pv {
+  position: sticky;
+  top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.sl {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  max-height: 78vh;
+  object-fit: contain;
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  background: #7F0025;
+}
+
+/* --------------------------------------------------------------------------
+   10. أزرار التنزيل وحالات الظهور (Export Buttons & Utility Classes)
+   -------------------------------------------------------------------------- */
+.dl {
+  padding: 13px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--ac);
+  color: var(--on);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.dl:hover {
+  opacity: 0.92;
+}
+
+.dl.s {
+  background: var(--bg);
+  color: var(--ac);
+  border: 2px solid var(--ac);
+}
+
+.dl.s:hover {
+  background: var(--sf);
+}
+
+/* إخفاء العناصر غير الخاصة بالقالب النشط */
+.hid {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   11. إضافات: أدوات التراجع، تلميحات، فواصل، وصناديق العناصر (Additions)
+   -------------------------------------------------------------------------- */
+.hint {
+  margin: 0;
+  padding: 8px 11px;
+  border-radius: 10px;
+  background: var(--sf);
+  border: 1px dashed var(--bd);
+  color: var(--mu);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.hint b {
+  color: var(--ac);
+}
+
+hr.sep {
+  border: 0;
+  border-top: 1px solid var(--bd);
+  margin: 4px 0;
+}
+
+.toolbar {
+  display: flex;
+  gap: 6px;
+}
+
+.toolbar button {
+  flex: 1;
+  padding: 9px 10px;
+  border: 2px solid var(--bd);
+  border-radius: 10px;
+  background: var(--sf);
+  color: var(--tx);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.toolbar button:hover:not(:disabled) {
+  border-color: var(--ac);
+}
+
+.toolbar button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+#layctl {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+#stlist .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#stlist .chip b {
+  font-weight: 700;
+}
+
+#stlist .chip .x {
+  color: var(--ac);
+  font-weight: 800;
+  padding: 0 3px;
+}
