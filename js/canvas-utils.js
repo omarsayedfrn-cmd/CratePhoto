@@ -67,7 +67,11 @@ const TXT = {
   ox: 0,           // إزاحة أفقية للعنوان
   oy: 0,           // إزاحة رأسية للعنوان
   accent: '#D3AE3A', // لون الكلمات المميزة بين قوسين { }
-  rich: true
+  rich: true,
+  spacing: 0,      // تباعد الحروف كنسبة من حجم الخط
+  highlight: false,// تظليل الكلمات المميزة
+  underline: false,// خط تحت الكلمات المميزة
+  gradient: false  // تدرّج لوني للكلمات المميزة
 };
 
 /**
@@ -101,10 +105,16 @@ function drawRichText(ctx, text, x, y, size, baseColor, align, shadowColor, shad
   const segments = parseRich(text, baseColor, TXT.accent).filter(s => s.t.length);
   if (!segments.length) return;
 
+  ctx.save();
   ctx.font = `${fontConfig.weight} ${size}px ${fontConfig.family}`;
   ctx.direction = 'rtl';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
+
+  // تباعد الحروف (مدعوم في المتصفحات الحديثة)
+  if ('letterSpacing' in ctx) {
+    ctx.letterSpacing = `${((TXT.spacing || 0) * size) / 100}px`;
+  }
 
   const widths = segments.map(s => ctx.measureText(s.t).width);
   const total = widths.reduce((a, b) => a + b, 0);
@@ -114,10 +124,43 @@ function drawRichText(ctx, text, x, y, size, baseColor, align, shadowColor, shad
   const lefts = [];
   segments.forEach((_, i) => { rightEdge -= widths[i]; lefts.push(rightEdge); });
 
+  // تظليل أو خط تحت الكلمات المميزة { }
+  if ((TXT.highlight || TXT.underline) && TXT.accent) {
+    segments.forEach((s, i) => {
+      if (s.c !== TXT.accent) return;
+      const w = widths[i];
+      if (TXT.highlight) {
+        ctx.fillStyle = hexToRgba(TXT.accent, 0.22);
+        drawRoundedRect(ctx, lefts[i] - size * 0.06, y - size * 0.62, w + size * 0.12, size * 1.24, size * 0.18);
+        ctx.fill();
+      }
+      if (TXT.underline) {
+        ctx.strokeStyle = s.c;
+        ctx.lineWidth = Math.max(2, size * 0.05);
+        ctx.beginPath();
+        ctx.moveTo(lefts[i], y + size * 0.52);
+        ctx.lineTo(lefts[i] + w, y + size * 0.52);
+        ctx.stroke();
+      }
+    });
+  }
+
   const offset = Math.max(4, size * 0.04) * (shadowStrength / 100);
   const paint = (color, dx, dy) => {
     ctx.fillStyle = color;
     segments.forEach((s, i) => ctx.fillText(s.t, lefts[i] + dx, y + dy));
+  };
+  const fillSegment = (segment, i) => {
+    if (TXT.gradient && segment.c === TXT.accent) {
+      const grad = ctx.createLinearGradient(lefts[i], y - size / 2, lefts[i] + widths[i], y + size / 2);
+      grad.addColorStop(0, TXT.accent);
+      grad.addColorStop(0.55, '#ffffff');
+      grad.addColorStop(1, TXT.accent);
+      ctx.fillStyle = grad;
+    } else {
+      ctx.fillStyle = segment.c;
+    }
+    ctx.fillText(segment.t, lefts[i], y);
   };
 
   if (shadowColor && shadowMode !== 'none' && offset > 0) {
@@ -129,7 +172,8 @@ function drawRichText(ctx, text, x, y, size, baseColor, align, shadowColor, shad
       ctx.shadowBlur = offset * 3;
       ctx.shadowOffsetX = offset;
       ctx.shadowOffsetY = offset;
-      segments.forEach((s, i) => { ctx.fillStyle = s.c; ctx.fillText(s.t, lefts[i], y); });
+      segments.forEach(fillSegment);
+      ctx.restore();
       ctx.restore();
       return;
     } else {
@@ -137,7 +181,8 @@ function drawRichText(ctx, text, x, y, size, baseColor, align, shadowColor, shad
     }
   }
 
-  segments.forEach((s, i) => { ctx.fillStyle = s.c; ctx.fillText(s.t, lefts[i], y); });
+  segments.forEach(fillSegment);
+  ctx.restore();
 }
 
 /**
@@ -618,6 +663,110 @@ function drawIcon(ctx, name, cx, cy, size, color) {
 }
 
 /**
+ * رسم أشكال هندسية جاهزة كملصقات (مربع، دايرة، نجمة، انفجار، موجة...)
+ */
+function drawShapeSticker(ctx, shape, size, color) {
+  const s = size / 2;
+  ctx.fillStyle = color;
+  ctx.strokeStyle = color;
+
+  const polygon = points => {
+    ctx.beginPath();
+    points.forEach(([px, py], i) => ctx[i ? 'lineTo' : 'moveTo'](px * s, py * s));
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  switch (shape) {
+    case 'rect':
+      drawRoundedRect(ctx, -s, -s, size, size, size * 0.16);
+      ctx.fill();
+      break;
+    case 'circle':
+      ctx.beginPath();
+      ctx.arc(0, 0, s, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    case 'ring':
+      ctx.lineWidth = Math.max(2, size * 0.12);
+      ctx.beginPath();
+      ctx.arc(0, 0, s * 0.78, 0, Math.PI * 2);
+      ctx.stroke();
+      break;
+    case 'triangle':
+      polygon([[0, -1], [1, 1], [-1, 1]]);
+      break;
+    case 'diamond':
+      polygon([[0, -1], [1, 0], [0, 1], [-1, 0]]);
+      break;
+    case 'star': {
+      const pts = [];
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 ? 0.46 : 1;
+        const a = -Math.PI / 2 + (i * Math.PI) / 5;
+        pts.push([r * Math.cos(a), r * Math.sin(a)]);
+      }
+      polygon(pts);
+      break;
+    }
+    case 'burst': {
+      const pts = [];
+      for (let i = 0; i < 24; i++) {
+        const r = i % 2 ? 0.72 : 1;
+        const a = -Math.PI / 2 + (i * Math.PI) / 12;
+        pts.push([r * Math.cos(a), r * Math.sin(a)]);
+      }
+      polygon(pts);
+      break;
+    }
+    case 'dot':
+      ctx.beginPath();
+      ctx.arc(0, 0, s * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    case 'line':
+      drawRoundedRect(ctx, -s, -size * 0.06, size, size * 0.12, size * 0.06);
+      ctx.fill();
+      break;
+    case 'arrow':
+      polygon([[-1, -0.32], [0.15, -0.32], [0.15, -0.7], [1, 0], [0.15, 0.7], [0.15, 0.32], [-1, 0.32]]);
+      break;
+    case 'wave':
+      ctx.beginPath();
+      ctx.moveTo(-s, s * 0.2);
+      ctx.bezierCurveTo(-s * 0.5, -s * 0.5, s * 0.5, s * 0.8, s, 0);
+      ctx.lineWidth = Math.max(2, size * 0.14);
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      break;
+    case 'badge': {
+      const pts = [];
+      for (let i = 0; i < 28; i++) {
+        const r = i % 2 ? 0.86 : 1;
+        const a = -Math.PI / 2 + (i * Math.PI) / 14;
+        pts.push([r * Math.cos(a), r * Math.sin(a)]);
+      }
+      polygon(pts);
+      break;
+    }
+    case 'blob':
+      ctx.beginPath();
+      ctx.moveTo(0, -s);
+      ctx.bezierCurveTo(s * 0.55, -s, s, -s * 0.55, s, 0);
+      ctx.bezierCurveTo(s, s * 0.55, s * 0.55, s, 0, s);
+      ctx.bezierCurveTo(-s * 0.55, s, -s, s * 0.55, -s, 0);
+      ctx.bezierCurveTo(-s, -s * 0.55, -s * 0.55, -s, 0, -s);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    default:
+      ctx.beginPath();
+      ctx.arc(0, 0, s, 0, Math.PI * 2);
+      ctx.fill();
+  }
+}
+
+/**
  * رسم طبقة ملصق/أيقونة
  */
 function drawSticker(ctx, l) {
@@ -625,12 +774,15 @@ function drawSticker(ctx, l) {
   ctx.globalAlpha = (l.op == null ? 100 : l.op) / 100;
   ctx.translate(l.x, l.y);
   ctx.rotate((l.rot || 0) * Math.PI / 180);
-  if (String(l.icon).startsWith('e:')) {
+  const icon = String(l.icon);
+  if (icon.startsWith('e:')) {
     ctx.font = `${l.size}px serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.direction = 'ltr';
-    ctx.fillText(l.icon.slice(2), 0, 0);
+    ctx.fillText(icon.slice(2), 0, 0);
+  } else if (icon.startsWith('s:')) {
+    drawShapeSticker(ctx, icon.slice(2), l.size, l.color || '#D3AE3A');
   } else {
     drawIcon(ctx, l.icon, 0, 0, l.size, l.color || '#D3AE3A');
   }
@@ -658,12 +810,110 @@ function drawImageFit(ctx, img, x, y, w, h, fit) {
 }
 
 /**
- * رسم طبقة صورة (مع قص الحواف والإضاءة والحدّة والتشبّع)
+ * فلاتر جاهزة للصور (تُطبَّق مع إضاءة/تباين/تشبّع الطبقة)
+ */
+const IMAGE_FX = {
+  bw: ['grayscale(1)', 'contrast(1.06)'],
+  warm: ['sepia(0.32)', 'saturate(1.25)', 'hue-rotate(-6deg)'],
+  cool: ['saturate(1.08)', 'brightness(1.03)', 'hue-rotate(-12deg)'],
+  vivid: ['saturate(1.45)', 'contrast(1.12)'],
+  vintage: ['sepia(0.45)', 'contrast(0.92)', 'brightness(1.05)'],
+  fade: ['contrast(0.85)', 'brightness(1.08)', 'saturate(0.8)']
+};
+
+/**
+ * رسم مسار القص حسب شكل الطبقة (دايرة/نجمة/سداسي/بلوب/قوس...)
+ */
+function imageShapePath(ctx, w, h, shape, radius = 0) {
+  const hw = w / 2;
+  const hh = h / 2;
+  ctx.beginPath();
+
+  if (shape === 'circle') {
+    ctx.arc(0, 0, Math.min(w, h) / 2, 0, Math.PI * 2);
+    return;
+  }
+
+  if (shape === 'diamond') {
+    ctx.moveTo(0, -hh);
+    ctx.lineTo(hw, 0);
+    ctx.lineTo(0, hh);
+    ctx.lineTo(-hw, 0);
+    ctx.closePath();
+    return;
+  }
+
+  if (shape === 'triangle') {
+    ctx.moveTo(0, -hh);
+    ctx.lineTo(hw, hh);
+    ctx.lineTo(-hw, hh);
+    ctx.closePath();
+    return;
+  }
+
+  if (shape === 'star') {
+    const outer = Math.min(hw, hh);
+    const inner = outer * 0.46;
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 ? inner : outer;
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      const px = r * Math.cos(a);
+      const py = r * Math.sin(a);
+      ctx[i ? 'lineTo' : 'moveTo'](px, py);
+    }
+    ctx.closePath();
+    return;
+  }
+
+  if (shape === 'hex') {
+    for (let i = 0; i < 6; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 3;
+      const px = hw * Math.cos(a);
+      const py = hh * Math.sin(a);
+      ctx[i ? 'lineTo' : 'moveTo'](px, py);
+    }
+    ctx.closePath();
+    return;
+  }
+
+  if (shape === 'blob') {
+    const k = 0.55;
+    ctx.moveTo(0, -hh);
+    ctx.bezierCurveTo(hw * k, -hh, hw, -hh * k, hw, 0);
+    ctx.bezierCurveTo(hw, hh * k, hw * k, hh, 0, hh);
+    ctx.bezierCurveTo(-hw * k, hh, -hw, hh * k, -hw, 0);
+    ctx.bezierCurveTo(-hw, -hh * k, -hw * k, -hh, 0, -hh);
+    ctx.closePath();
+    return;
+  }
+
+  if (shape === 'arch') {
+    ctx.moveTo(-hw, hh);
+    ctx.lineTo(-hw, -hh + Math.min(hw, hh));
+    ctx.arc(0, -hh + Math.min(hw, hh), Math.min(hw, hh), Math.PI, 0);
+    ctx.lineTo(hw, hh);
+    ctx.closePath();
+    return;
+  }
+
+  // مستطيل بحواف دائرية (الافتراضي)
+  const r = Math.max(0, Math.min(radius, hw, hh));
+  ctx.moveTo(-hw + r, -hh);
+  ctx.arcTo(hw, -hh, hw, hh, r);
+  ctx.arcTo(hw, hh, -hw, hh, r);
+  ctx.arcTo(-hw, hh, -hw, -hh, r);
+  ctx.arcTo(-hw, -hh, hw, -hh, r);
+  ctx.closePath();
+}
+
+/**
+ * رسم طبقة صورة (مع قص الحواف والإضاءة والحدّة والتشبّع والفلاتر)
  */
 function drawImageLayer(ctx, l) {
   const img = l.img;
   const w = l.w;
   const h = l.w * (img.height / img.width);
+  const shape = l.shape || (l.fit === 'circle' ? 'circle' : 'rounded');
   ctx.save();
   ctx.globalAlpha = (l.op == null ? 100 : l.op) / 100;
   ctx.translate(l.x, l.y);
@@ -675,14 +925,7 @@ function drawImageLayer(ctx, l) {
     ctx.shadowOffsetY = 18;
   }
 
-  if (l.fit === 'circle') {
-    const r = Math.min(w, h) / 2;
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-  } else {
-    const radius = Math.min(l.rad || 0, w / 2, h / 2);
-    drawRoundedRect(ctx, -w / 2, -h / 2, w, h, radius);
-  }
+  imageShapePath(ctx, w, h, shape, l.rad || 0);
   ctx.save();
   ctx.clip();
   ctx.shadowColor = 'transparent';
@@ -691,6 +934,7 @@ function drawImageLayer(ctx, l) {
   if (l.br != null) filters.push(`brightness(${l.br / 100})`);
   if (l.co != null) filters.push(`contrast(${l.co / 100})`);
   if (l.sat != null) filters.push(`saturate(${l.sat / 100})`);
+  if (l.fx && IMAGE_FX[l.fx]) filters.push(...IMAGE_FX[l.fx]);
   if (filters.length) ctx.filter = filters.join(' ');
 
   drawImageFit(ctx, img, -w / 2, -h / 2, w, h, l.fit === 'contain' ? 'contain' : 'cover');
@@ -699,15 +943,8 @@ function drawImageLayer(ctx, l) {
   if (l.frame) {
     ctx.strokeStyle = hexToRgba(l.color || '#D3AE3A', 0.9);
     ctx.lineWidth = 6;
-    if (l.fit === 'circle') {
-      ctx.beginPath();
-      ctx.arc(0, 0, Math.min(w, h) / 2 - 3, 0, Math.PI * 2);
-      ctx.stroke();
-    } else {
-      const radius = Math.min(l.rad || 0, w / 2, h / 2);
-      drawRoundedRect(ctx, -w / 2, -h / 2, w, h, radius);
-      ctx.stroke();
-    }
+    imageShapePath(ctx, w - 6, h - 6, shape, Math.max(0, (l.rad || 0) - 3));
+    ctx.stroke();
   }
   ctx.restore();
 }
@@ -727,13 +964,14 @@ function layerBounds(l) {
  */
 function drawLayers(ctx, layers, selectedId, exportMode) {
   (layers || []).forEach(l => {
+    if (l.hidden) return;
     if (l.type === 'image' && l.img) drawImageLayer(ctx, l);
     else if (l.type === 'sticker') drawSticker(ctx, l);
   });
 
   if (!exportMode && selectedId) {
     const l = (layers || []).find(x => x.id === selectedId);
-    if (l) {
+    if (l && !l.hidden) {
       const b = layerBounds(l);
       ctx.save();
       ctx.translate(l.x, l.y);

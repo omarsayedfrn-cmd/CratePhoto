@@ -251,11 +251,43 @@ function updateFieldVisibility() {
 }
 
 // ----------------------------------------------------------------------------
+// 5.b تبديل تبويبات لوحة التحكم (Control Panel Tabs)
+// ----------------------------------------------------------------------------
+function showControlTab(name) {
+  document.querySelectorAll('.tab').forEach(tab => {
+    const active = tab.dataset.tab === name;
+    tab.classList.toggle('on', active);
+    tab.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  document.querySelectorAll('.tabpanel').forEach(panel => {
+    panel.classList.toggle('on', panel.dataset.panel === name);
+  });
+  try { localStorage.setItem('controlTab', name); } catch (err) { /* تجاهل */ }
+}
+
+// تفويض الحدث حتى تعمل التبويبات المضافة لاحقاً (تبويب الأدوات)
+document.addEventListener('click', e => {
+  const tab = e.target.closest('.tab');
+  if (tab) showControlTab(tab.dataset.tab);
+});
+
+const savedControlTab = (() => {
+  try { return localStorage.getItem('controlTab'); } catch { return null; }
+})();
+
+if (savedControlTab && document.querySelector(`.tab[data-tab="${savedControlTab}"]`)) {
+  showControlTab(savedControlTab);
+}
+
+// ----------------------------------------------------------------------------
 // 6. دالة الرسم الأساسية (Main Canvas Render Loop)
 // ----------------------------------------------------------------------------
-function draw(exportMode = false) {
+function draw(exportMode = false, options = {}) {
   const v = getFormValues();
-  const exportScale = +$('xs').value;
+  const target = options.canvas || canvas;
+  const tctx = options.ctx || target.getContext('2d');
+  const template = options.template || activeTemplate;
+  const exportScale = options.scale || +$('xs').value;
   const fontConfig = getFontConfig();
   const shadowMode = $('sm').value;
   const shadowStrength = +$('ss').value;
@@ -267,36 +299,43 @@ function draw(exportMode = false) {
   TXT.oy = v.tty;
   TXT.accent = v.gold;
   TXT.rich = true;
+  TXT.spacing = v.tsp || 0;
+  TXT.highlight = !!v.thl;
+  TXT.underline = !!v.tun;
+  TXT.gradient = !!v.tgd;
 
-  canvas.width = v.W * exportScale;
-  canvas.height = v.H * exportScale;
+  target.width = Math.max(1, Math.round(v.W * exportScale));
+  target.height = Math.max(1, Math.round(v.H * exportScale));
 
-  ctx.setTransform(exportScale, 0, 0, exportScale, 0, 0);
-  ctx.lineCap = 'butt';
-  ctx.filter = 'none';
+  tctx.setTransform(exportScale, 0, 0, exportScale, 0, 0);
+  tctx.lineCap = 'butt';
+  tctx.filter = 'none';
 
-  // 1. رسم الخلفية
-  drawBackground(ctx, v, loadedAssets.bg);
+  // 1. رسم الخلفية (يمكن تخطيها لتصدير خلفية شفافة)
+  if (!options.noBg) drawBackground(tctx, v, loadedAssets.bg);
 
   // 2. رسم العناصر التزيينية وحساب الحد المتبقي للمحتوى
-  const bottomLimit = drawDeco(ctx, v) - 30;
+  const bottomLimit = drawDeco(tctx, v) - 30;
 
   // 3. رسم القالب النشط
-  if (window.TEMPLATES && window.TEMPLATES[activeTemplate]) {
-    window.TEMPLATES[activeTemplate](ctx, v, bottomLimit, loadedAssets, fontConfig, shadowMode, shadowStrength);
+  if (window.TEMPLATES && window.TEMPLATES[template]) {
+    window.TEMPLATES[template](tctx, v, bottomLimit, loadedAssets, fontConfig, shadowMode, shadowStrength);
   }
 
   // 4. رسم الطبقات (الصور المتعددة + الملصقات) وإطار التحديد
-  drawLayers(ctx, layers, selectedLayerId, exportMode);
+  drawLayers(tctx, layers, options.hideLayers ? null : selectedLayerId, exportMode);
 
   // 5. رسم الطبقات العلوية الإضافية (الإطار، الشارة، الترقيم، العلامة المائية، الشعار)
-  drawOverlays(ctx, v, loadedAssets.logo, fontConfig);
+  drawOverlays(tctx, v, loadedAssets.logo, fontConfig);
 
   // 6. أدوات المحاذاة على الشاشة فقط (شبكة + خطوط المغناطيس) — لا تُصدَّر
   if (!exportMode) {
-    if (snapEnabled) drawGrid(ctx, v, gridStep);
-    drawGuides(ctx, v, activeGuides);
+    if (snapEnabled) drawGrid(tctx, v, gridStep);
+    drawGuides(tctx, v, activeGuides);
   }
+
+  // 7. طبقات إضافية من وحدة الأدوات (مناطق آمنة/مساطر) — لا تُصدَّر
+  if (window.drawProOverlays) window.drawProOverlays(tctx, v, exportMode, options);
 }
 
 // ----------------------------------------------------------------------------
@@ -639,6 +678,7 @@ function pointInLayer(p) {
   for (let i = layers.length - 1; i >= 0; i--) {
     const l = layers[i];
     if (l.type === 'image' && !l.img) continue;
+    if (l.hidden || l.locked) continue;
     const b = layerBounds(l);
     const a = -(l.rot || 0) * Math.PI / 180;
     const dx = p.x - l.x;
@@ -981,7 +1021,7 @@ $('dla').onclick = async () => {
   // استرجاع البيانات المحفوظة من localStorage إن وُجدت وكانت متطابقة بعدد الحقول
   try {
     const savedData = JSON.parse(localStorage.getItem('designer2') || 'null');
-    if (savedData && savedData.SL && savedData.SL.length && savedData.SL.every(slide => slide.v.length === formFields.length)) {
+    if (savedData && savedData.SL && savedData.SL.length && savedData.SL.every(slide => slide.v.length <= formFields.length)) {
       slides = savedData.SL;
       currentSlideIndex = Math.min(savedData.cur, slides.length - 1);
     }

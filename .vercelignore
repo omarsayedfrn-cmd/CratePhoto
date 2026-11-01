@@ -1,0 +1,8 @@
+*.backup
+README.md
+.git
+.vercel
+node_modules
+.env
+.env.*
+*.local.js

@@ -28,10 +28,30 @@
     <!-- لوحة التحكم الجانبية (Controls Panel) -->
     <div class="ctl">
 
-      <!-- 1. القالب والمقاس -->
-      <details open>
-        <summary>القالب والمقاس</summary>
-        <div>
+      <!-- تبويبات التحكم الرئيسية: المحتوى / التصميم / العناصر / الإضافات -->
+      <div class="tabs" role="tablist" aria-label="أقسام التحكم">
+        <button type="button" class="tab on" data-tab="content" role="tab" aria-selected="true">المحتوى</button>
+        <button type="button" class="tab" data-tab="design" role="tab" aria-selected="false">التصميم</button>
+        <button type="button" class="tab" data-tab="elements" role="tab" aria-selected="false">العناصر</button>
+        <button type="button" class="tab" data-tab="extra" role="tab" aria-selected="false">الإضافات</button>
+      </div>
+
+      <!-- ===================== 1) المحتوى ===================== -->
+      <section class="tabpanel on" data-panel="content" role="tabpanel">
+
+        <details class="guide">
+          <summary>دليل سريع — ابدأ في 5 خطوات</summary>
+          <ol>
+            <li>اختار <b>القالب</b> و<b>المقاس</b> من الكارت الأول.</li>
+            <li>اكتب <b>العنوان</b> والأسطر. لتلوين كلمة واحدة حطها بين <b>{ }</b>.</li>
+            <li>روح تبويب <b>التصميم</b> وغيّر الألوان والخلفية.</li>
+            <li>من تبويب <b>العناصر</b> ضيف صور أو ملصقات، واسحبها على المعاينة.</li>
+            <li>اضغط <b>«حمّل الشريحة دي»</b> تحت المعاينة، أو حمّل كل الشرائح.</li>
+          </ol>
+        </details>
+
+        <div class="group">
+          <h3>القالب والمقاس</h3>
           <div class="row tpls" id="tp">
             <button type="button" data-t="cover" class="on">غلاف</button>
             <button type="button" data-t="bubble">فقاعة</button>
@@ -62,12 +82,10 @@
             </label>
           </div>
         </div>
-      </details>
 
-      <!-- 2. النصوص والمحتوى -->
-      <details open>
-        <summary>النصوص</summary>
-        <div>
+        <div class="group">
+          <h3>النصوص</h3>
+
           <label>العنوان — سطر أول
             <input type="text" id="t1" class="f" value="تعالى اقولك">
           </label>
@@ -110,6 +128,10 @@
           <label>حرّك العنوان — فوق/تحت
             <input type="range" id="tty" class="f" min="-1000" max="1000" value="0">
           </label>
+        </div>
+
+        <div class="group only shot hid">
+          <h3>إعدادات السكرين شوت</h3>
 
           <label class="only shot hid">سكرين شوت <small>(ارفعي أو الصقي Ctrl+V)</small>
             <input type="file" id="img" accept="image/*">
@@ -151,6 +173,10 @@
           <label class="only shot hid">حرّك اللينك — فوق/تحت
             <input type="range" id="lky" class="f" min="-1000" max="1000" value="0">
           </label>
+        </div>
+
+        <div class="group">
+          <h3>الخط والظل</h3>
 
           <div class="g2">
             <label>الخط
@@ -180,12 +206,14 @@
             </label>
           </div>
         </div>
-      </details>
 
-      <!-- 2.b الصور المتعددة والعناصر الجاهزة -->
-      <details>
-        <summary>الصور والعناصر الجاهزة</summary>
-        <div>
+      </section>
+
+      <!-- ===================== 3) العناصر ===================== -->
+      <section class="tabpanel" data-panel="elements" role="tabpanel">
+
+        <div class="group">
+          <h3>الشبكة والمغناطيس</h3>
           <div class="chk">
             <label><input type="checkbox" id="snap" checked> شبكة ومغناطيس <small>(تظبيط الأماكن)</small></label>
             <label>خطوة <select id="gsize">
@@ -195,19 +223,27 @@
               <option value="80">80</option>
             </select></label>
           </div>
+          <p class="hint">المغناطيس بيساعدك تظبط العناصر على الشبكة وخطوط المنتصف. اسحب أي عنصر على المعاينة وحركه بدقة.</p>
+        </div>
 
+        <div class="group">
+          <h3>الصور</h3>
           <label>أضف صورة جديدة <small>(تقدر ترفع أكتر من صورة في نفس الشريحة)</small>
             <input type="file" id="addimg" accept="image/*" multiple>
           </label>
 
+          <small>ترتيب سريع للصور:</small>
           <div class="row">
             <button type="button" class="chip" data-arr="side">صورتين جنب بعض</button>
             <button type="button" class="chip" data-arr="stack">صورتين فوق بعض</button>
             <button type="button" class="chip" data-arr="step">صورة + خطوة</button>
             <button type="button" class="chip" data-arr="circle">قص مايل / دايرة</button>
           </div>
+        </div>
 
-          <small>عناصر جاهزة — اضغط لتضيفها جوه الشريحة:</small>
+        <div class="group">
+          <h3>مكتبة العناصر الجاهزة</h3>
+          <small>اضغط على أي عنصر لتضيفه جوه الشريحة، وبعدها اسحبه من المعاينة.</small>
           <div class="row" id="stickers">
             <button type="button" class="chip stk" data-icon="mobile">موبايل</button>
             <button type="button" class="chip stk" data-icon="arrow">سهم</button>
@@ -224,7 +260,10 @@
             <button type="button" class="chip stk" data-icon="e:➡️">➡️</button>
             <button type="button" class="chip stk" data-icon="e:📱">📱</button>
           </div>
+        </div>
 
+        <div class="group">
+          <h3>العنصر المحدد</h3>
           <div id="layctl" class="hid">
             <small>تحكم في العنصر/الصورة المحددة، أو اسحبها بالماوس مباشرة:</small>
             <div class="g2">
@@ -249,15 +288,21 @@
               <button type="button" class="chip" id="ldel">🗑 احذف العنصر</button>
             </div>
           </div>
+          <p class="hint">اضغط على أي صورة أو ملصق على المعاينة عشان تظهر أدوات التحكم فيه. وبرضه تقدر تسحبه بالماوس أو الصباع.</p>
         </div>
-      </details>
 
-      <!-- 3. الألوان والخلفية -->
-      <details>
-        <summary>الألوان والخلفية</summary>
-        <div>
+      </section>
+
+      <!-- ===================== 2) التصميم ===================== -->
+      <section class="tabpanel" data-panel="design" role="tabpanel">
+
+        <div class="group">
+          <h3>لوحة ألوان جاهزة</h3>
           <div class="pal" id="pal"></div>
+        </div>
 
+        <div class="group">
+          <h3>ألوان مخصصة</h3>
           <div class="cols">
             <label>خلفية<input type="color" id="c1" class="f" value="#7F0025"></label>
             <label>نمط<input type="color" id="c2" class="f" value="#6c001f"></label>
@@ -265,7 +310,10 @@
             <label>غامق<input type="color" id="dark" class="f" value="#121212"></label>
             <label>كلام<input type="color" id="tc" class="f" value="#ffffff"></label>
           </div>
+        </div>
 
+        <div class="group">
+          <h3>الخلفية</h3>
           <label>نمط الخلفية
             <select id="pat" class="f">
               <option value="stripes">مخطط</option>
@@ -285,21 +333,25 @@
           <label>قوة تغطية لون الخلفية على الصورة
             <input type="range" id="ov" class="f" min="0" max="95" value="60">
           </label>
+        </div>
 
-          <hr class="sep">
-
-          <label>احفظ الستايل الحالي باسم <small>(ألوان + خط + ظل — يتطبق على أي شريحة)</small>
+        <div class="group">
+          <h3>ستايلات محفوظة</h3>
+          <small>احفظ الألوان والخط والظل كستايل واحد، وطبّقه على أي شريحة بعد كده.</small>
+          <label>اسم الستايل
             <input type="text" id="stname" placeholder="مثلاً: ستايلي الذهبي">
           </label>
           <button type="button" class="chip" id="stsave">💾 حفظ الستايل</button>
           <div class="row" id="stlist"></div>
         </div>
-      </details>
 
-      <!-- 4. عناصر وإضافات -->
-      <details>
-        <summary>عناصر وإضافات</summary>
-        <div>
+      </section>
+
+      <!-- ===================== 4) الإضافات ===================== -->
+      <section class="tabpanel" data-panel="extra" role="tabpanel">
+
+        <div class="group">
+          <h3>ديكورات</h3>
           <div class="chk">
             <label><input type="checkbox" id="chev" class="f"> أسهم</label>
             <label><input type="checkbox" id="icon" class="f"> أيقونة تحميل</label>
@@ -307,23 +359,24 @@
             <label><input type="checkbox" id="bars" class="f"> شريطين</label>
           </div>
 
-          <div class="g2">
-            <label>اتجاه الأسهم
-              <select id="cd" class="f">
-                <option value="l">شمال</option>
-                <option value="r">يمين</option>
-              </select>
-            </label>
+          <label>اتجاه الأسهم
+            <select id="cd" class="f">
+              <option value="l">شمال</option>
+              <option value="r">يمين</option>
+            </select>
+          </label>
+        </div>
 
-            <label>إطار
-              <select id="fr" class="f">
-                <option value="none">بدون</option>
-                <option value="thin">رفيع</option>
-                <option value="thick">سميك</option>
-                <option value="dbl">مزدوج</option>
-              </select>
-            </label>
-          </div>
+        <div class="group">
+          <h3>الإطار والشارة</h3>
+          <label>إطار
+            <select id="fr" class="f">
+              <option value="none">بدون</option>
+              <option value="thin">رفيع</option>
+              <option value="thick">سميك</option>
+              <option value="dbl">مزدوج</option>
+            </select>
+          </label>
 
           <div class="g2">
             <label>شارة <small>(مثلاً: جديد)</small>
@@ -337,7 +390,10 @@
               </select>
             </label>
           </div>
+        </div>
 
+        <div class="group">
+          <h3>الهوية والترقيم</h3>
           <div class="g2">
             <label>اسم/حساب <small>(إنجليزي أو عربي)</small>
               <input type="text" id="wm" class="f" placeholder="@name">
@@ -354,7 +410,10 @@
           <label>ترقيم الشرايح <small>(مثلاً 1/4)</small>
             <input type="text" id="cnt" class="f" dir="ltr">
           </label>
+        </div>
 
+        <div class="group">
+          <h3>اللوجو</h3>
           <div class="g2">
             <label>لوجو
               <input type="file" id="logo" accept="image/*">
@@ -370,7 +429,8 @@
             </label>
           </div>
         </div>
-      </details>
+
+      </section>
 
     </div>
 
@@ -390,6 +450,15 @@
   <!-- ملفات جافاسكريبت مقسمة ومنظمة -->
   <script src="js/canvas-utils.js"></script>
   <script src="js/templates.js"></script>
+
+  <!-- مكتبات الأدوات المتقدمة (مضافة محلياً لتعمل بدون إنترنت) -->
+  <script src="js/vendor/qrcode.js"></script>
+  <script src="js/vendor/jszip.min.js"></script>
+  <script src="js/vendor/jspdf.umd.min.js"></script>
+  <script src="js/vendor/gifenc.umd.js"></script>
+
+  <!-- الأدوات المتقدمة (قبل app.js لتضيف حقولها وتبويبها) -->
+  <script src="js/pro.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
